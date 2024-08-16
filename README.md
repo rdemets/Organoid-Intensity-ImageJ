@@ -14,7 +14,7 @@ This macro requires  **IJPB-plugins** from the Fiji plugins updater.
 
 ## How to use
 
-Click on run and modify the GUI according to your experiment. The path should be a folder containing a list of folders with images inside in tiff.
+Click on run and modify the GUI according to your experiment. The path should be a folder containing a list of folders with images inside saved in tiff format.
 
 
 

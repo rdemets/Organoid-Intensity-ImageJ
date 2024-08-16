@@ -1,5 +1,4 @@
-// needs PTBIOP for cellpose
-// needs CLIJ2 for label expansion
+
 
 
 // This macro aims to quantify the organoid size and channel 2 intensity 
@@ -28,7 +27,7 @@ for (i = 0; i < folders.length; i++) {
 		// Open file if CZI
 			currFile = dirS+folders[i]+filenames[j];
 			print(currFile);
-			if(endsWith(currFile, ".tiff")) { // process czi files matching regex
+			if(endsWith(currFile, ".tiff")) { // process tiff files matching regex
 				//open(currFile);
 				run("Clear Results");
 				roiManager("reset");
