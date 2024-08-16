@@ -22,4 +22,4 @@ Click on run and modify the GUI according to your experiment. The path should be
 (0.0.1) Autothreshold of organoid
 <br>(0.1.0) Added comments and README
 <br>(0.1.1) Works on 2 channels as well
-
+<br>(0.1.2) Remove organoid below 500px

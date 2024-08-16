@@ -6,7 +6,7 @@
 
 
 // Macro author R. De Mets
-// Version : 0.1.1 , 16/08/2024
+// Version : 0.1.2 , 16/08/2024
 
 
 // GUI and initialization
@@ -44,16 +44,16 @@ for (i = 0; i < folders.length; i++) {
 				run("Split Channels");
 				selectWindow("C"+channels+"-raw");
 				run("Duplicate...", " ");
-				run("Gaussian Blur...", "sigma=30");
+				run("Gaussian Blur...", "sigma=50");
 				rename("blurred");
 				
 				imageCalculator("Divide create 32-bit", "C"+channels+"-raw","blurred");
 				selectImage("Result of C"+channels+"-raw");
 				rename("corrected");
-				
+
 				
 				// remove wells
-				run("Median...", "radius=10");
+				run("Median...", "radius=12");
 				
 				// Auto threshold default seems to work fine for most images.
 				setAutoThreshold("Default");
@@ -61,6 +61,7 @@ for (i = 0; i < folders.length; i++) {
 				run("Create Selection");
 				run("Create Mask");
 				run("Connected Components Labeling", "connectivity=8 type=[16 bits]");
+				run("Label Size Filtering", "operation=Greater_Than size=500");
 				rename("Labels");
 				
 				// remove organoids at the border and save in ROI manager
