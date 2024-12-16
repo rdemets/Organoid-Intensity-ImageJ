@@ -2,25 +2,26 @@
 
 
 // This macro aims to quantify the organoid size and channel 2 intensity 
-// All function used are available from the stable version of Fiji and PTBIOP plugins.
+// All function used are available from the stable version of Fiji with IJPB and CLIJ plugins.
 
 
 // Macro author R. De Mets
-// Version : 0.1.4 , 11/09/2024
+// Version : 0.1.5 , 16/12/2024
 // Otsu threshold
 // float connected components
-//ask for channels to segment
+// ask for channels to segment
 // add CLIJ to filter based on circularity (https://forum.image.sc/t/excluding-masks-of-a-certain-circularity-before-converting-to-rois/76220/2) 
+// fix measurement channel error
 
 
 // GUI and initialization
-setBatchMode(true);
+//setBatchMode(true);
 run("Close All");
 print("\\Clear");
 Dialog.create("GUI");
 Dialog.addDirectory("Source image path","");
-Dialog.addNumber("Which channels is the BF channel ?", 2);
-Dialog.addNumber("Which channels is the Fluo channel ?", 3);
+Dialog.addNumber("Which channels is the BF channel ?", 3);
+Dialog.addNumber("Which channels is the Fluo channel ?", 2);
 Dialog.addNumber("Minimum circularity ?", 0.85);
 Dialog.addNumber("Minimum organoid size (px) ?", 500);
 Dialog.show();
@@ -55,22 +56,21 @@ for (i = 0; i < folders.length; i++) {
 				getDimensions(width, height, channels, slices, frames);
 				getPixelSize(unit, pw, ph, pd);
 				title = File.nameWithoutExtension;
-				print(window_title);
 				
 				
-				// Background correction on the last channel
+				// Background correction on the BF channel
 				rename("raw");
 				run("Split Channels");
 				selectWindow("C"+channel_BF+"-raw");
-				run("Duplicate...", " ");
+				run("Duplicate...", "title=blurred");
+				
+				selectWindow("blurred");
 				run("Gaussian Blur...", "sigma=50");
-				rename("blurred");
 				
 				imageCalculator("Divide create 32-bit", "C"+channel_BF+"-raw","blurred");
 				selectImage("Result of C"+channel_BF+"-raw");
 				rename("corrected");
 
-				
 				// remove wells
 				run("Median...", "radius=12");
 				
@@ -130,7 +130,7 @@ for (i = 0; i < folders.length; i++) {
 				Circularity = Table.getColumn("Circularity");
 				
 				// Analyse intensities
-				run("Intensity Measurements 2D/3D", "input=C"+channels-1+"-raw labels=Labels-killBorders mean stddev min median numberofvoxels volume");
+				run("Intensity Measurements 2D/3D", "input=C"+channel_Fluo+"-raw labels=Labels-killBorders mean stddev min median numberofvoxels volume");
 				rename("Results");
 				
 				

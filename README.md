@@ -25,3 +25,4 @@ Click on run and modify the GUI according to your experiment. The path should be
 <br>(0.1.2) Remove organoid below 500px
 <br>(0.1.3) Ask for channel to segment
 <br>(0.1.4) add CLIJ to filter based on circularity (https://forum.image.sc/t/excluding-masks-of-a-certain-circularity-before-converting-to-rois/76220/2) 
+<br>(0.1.5) Fix measurement extra channel
