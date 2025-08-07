@@ -1,27 +1,33 @@
+/*
+Plugins to install : 
+IJPB
+CLIJ/CLIJ2
 
+This macro aims to quantify the organoid size and channel 2 intensity 
 
-
-// This macro aims to quantify the organoid size and channel 2 intensity 
-// All function used are available from the stable version of Fiji with IJPB and CLIJ plugins.
-
-
-// Macro author R. De Mets
-// Version : 0.1.5 , 16/12/2024
-// Otsu threshold
-// float connected components
-// ask for channels to segment
-// add CLIJ to filter based on circularity (https://forum.image.sc/t/excluding-masks-of-a-certain-circularity-before-converting-to-rois/76220/2) 
-// fix measurement channel error
+Macro author R. De Mets
+Version : 0.2.0 , 7/8/2025
+Otsu threshold
+float connected components
+ask for channels to segment
+add CLIJ to filter based on circularity (https://forum.image.sc/t/excluding-masks-of-a-certain-circularity-before-converting-to-rois/76220/2) 
+fix measurement channel error
+add batch mode
+add radio buttons for BF or Fluo image to segment organoid
+works on tif and tiff
+*/
 
 
 // GUI and initialization
-//setBatchMode(true);
+setBatchMode(false);
 run("Close All");
 print("\\Clear");
 Dialog.create("GUI");
 Dialog.addDirectory("Source image path","");
-Dialog.addNumber("Which channels is the BF channel ?", 3);
-Dialog.addNumber("Which channels is the Fluo channel ?", 2);
+Dialog.addNumber("Which channels to identify organoids ?", 1);
+Dialog.addRadioButtonGroup("", newArray("Fluorescent", "Brightfield"),1, 2, "Fluorescent");
+Dialog.addCheckbox("Batch mode ? (no display, faster)", true);
+Dialog.addNumber("Which channels is measure intensities ?", 2);
 Dialog.addNumber("Minimum circularity ?", 0.85);
 Dialog.addNumber("Minimum organoid size (px) ?", 500);
 Dialog.show();
@@ -31,6 +37,8 @@ dirS = Dialog.getString;
 
 folders = getFileList(dirS);
 channel_BF = Dialog.getNumber();
+modalities = Dialog.getRadioButton();
+batch = Dialog.getCheckbox();
 channel_Fluo = Dialog.getNumber();
 
 
@@ -39,15 +47,17 @@ maxCircularity = 1.1;
 minOrgSize = Dialog.getNumber();
 
 
+if (batch) {
+	setBatchMode(true);
+}
 
 for (i = 0; i < folders.length; i++) {
 	if (matches(folders[i],".*/")) {
 		filenames = getFileList(dirS+folders[i]);
 		for (j = 0; j < filenames.length; j++) {
-		// Open file if CZI
 			currFile = dirS+folders[i]+filenames[j];
 			print(currFile);
-			if(endsWith(currFile, ".tiff")) { // process tiff files matching regex
+			if(endsWith(currFile, ".tiff") || endsWith(currFile, ".tif")) { // process tiff files matching regex
 				//open(currFile);
 				run("Clear Results");
 				roiManager("reset");
@@ -61,29 +71,46 @@ for (i = 0; i < folders.length; i++) {
 				// Background correction on the BF channel
 				rename("raw");
 				run("Split Channels");
-				selectWindow("C"+channel_BF+"-raw");
-				run("Duplicate...", "title=blurred");
 				
-				selectWindow("blurred");
-				run("Gaussian Blur...", "sigma=50");
 				
-				imageCalculator("Divide create 32-bit", "C"+channel_BF+"-raw","blurred");
-				selectImage("Result of C"+channel_BF+"-raw");
-				rename("corrected");
-
-				// remove wells
-				run("Median...", "radius=12");
+				// Organoid identification
 				
-				// Auto threshold default seems to work fine for most images.
-				setAutoThreshold("Otsu");
-				//run("Threshold...");
+				if (modalities=="Brightfield") {
+					//print("Brightfield image");
+					selectWindow("C"+channel_BF+"-raw");
+					run("Duplicate...", "title=blurred");
+					
+					selectWindow("blurred");
+					run("Gaussian Blur...", "sigma=50");
+					
+					imageCalculator("Divide create 32-bit", "C"+channel_BF+"-raw","blurred");
+					selectImage("Result of C"+channel_BF+"-raw");
+					rename("corrected");
+	
+					// remove wells borders
+					run("Median...", "radius=15");
+					
+					// Auto threshold default seems to work fine for most images.
+					setAutoThreshold("Otsu");
+					//run("Threshold...");
+				}
+				else {
+					//print("Fluorescent image");
+					selectWindow("C"+channel_BF+"-raw");
+					run("Duplicate...", "title=blurred");
+					run("Median...", "radius=3");
+					setAutoThreshold("Otsu dark");
+				}
+				
+				
+				
 				run("Create Selection");
 				run("Create Mask");
+				run("Fill Holes");
 				run("Connected Components Labeling", "connectivity=8 type=[float]");
 
 				
 				// Test filter circularity
-				
 				labelmap = getTitle();
 
 				//Measure shape features using MorpholibJ, add an entry for the background label (required for CLIJ)
